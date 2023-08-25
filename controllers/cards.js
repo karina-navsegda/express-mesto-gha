@@ -14,7 +14,7 @@ module.exports.addCard = (req, res, next) => {
     owner: req.user._id,
   })
     .then((card) => {
-      res.send({ data: card });
+      res.status(201).send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -53,7 +53,7 @@ module.exports.addLikeCard = (req, res) => {
           message: 'Такой карточки нет',
         });
       }
-      return res.status(201).send(card);
+      return res.status(200).send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
