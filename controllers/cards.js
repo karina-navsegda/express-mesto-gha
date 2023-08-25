@@ -75,7 +75,7 @@ module.exports.removeLikeCard = (req, res) => {
           message: 'Такой карточки нет',
         });
       }
-      return res.status(201).send(card);
+      return res.status(200).send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
