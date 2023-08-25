@@ -30,7 +30,9 @@ module.exports.getUserId = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Неверный формат идентификатора пользователя' });
+        res
+          .status(400)
+          .send({ message: 'Неверный формат идентификатора пользователя' });
         return;
       }
       res.status(500).send({ message: 'Ошибка на сервере' });
@@ -40,13 +42,17 @@ module.exports.getUserId = (req, res) => {
 module.exports.editUser = (req, res) => {
   const { name, about } = req.body;
   if (req.user._id) {
-    User.findByIdAndUpdate(req.user._id, { name, about }, { runValidators: true, new: 'true' })
+    User.findByIdAndUpdate(
+      req.user._id,
+      { name, about },
+      { runValidators: true, new: 'true' },
+    )
       .then((user) => res.send(user))
       .catch((err) => {
         if (err.name === 'ValidationError') {
           res.status(400).send({ message: err.message });
         } else {
-          res.status(404).send({ message: 'Пользователь не существует' });
+          res.status(500).send({ message: 'Произошла ошибка' });
         }
       });
   } else {
@@ -56,13 +62,17 @@ module.exports.editUser = (req, res) => {
 
 module.exports.editAvatar = (req, res) => {
   if (req.user._id) {
-    User.findByIdAndUpdate(req.user._id, { avatar: req.body.avatar }, { runValidators: true, new: 'true' })
+    User.findByIdAndUpdate(
+      req.user._id,
+      { avatar: req.body.avatar },
+      { runValidators: true, new: 'true' },
+    )
       .then((user) => res.send(user))
       .catch((err) => {
         if (err.name === 'ValidationError') {
           res.status(400).send({ message: err.message });
         } else {
-          res.status(404).send({ message: 'Пользователь не существует' });
+          res.status(500).send({ message: 'Произошла ошибка' });
         }
       });
   } else {

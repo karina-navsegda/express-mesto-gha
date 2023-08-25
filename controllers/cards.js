@@ -26,19 +26,23 @@ module.exports.addCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res) => {
-  if (req.params.cardId.length === 24) {
-    Card.findByIdAndRemove(req.params.cardId)
-      .then((card) => {
-        if (!card) {
-          res.status(404).send({ message: 'Такой карточки нет' });
-          return;
-        }
-        res.send({ message: 'Карточка удалена' });
-      })
-      .catch(() => res.status(404).send({ message: 'Такой карточки нет' }));
-  } else {
-    res.status(400).send({ message: 'Такой карточки нет' });
-  }
+  Card.findByIdAndRemove(req.params.cardId)
+    .then((card) => {
+      if (!card) {
+        res.status(404).send({ message: 'Такой карточки нет' });
+        return;
+      }
+      res.send({ message: 'Карточка удалена' });
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res
+          .status(400)
+          .send({ message: 'Неверный формат идентификатора карточки' });
+        return;
+      }
+      res.status(500).send({ message: 'Ошибка на сервере' });
+    });
 };
 
 module.exports.addLikeCard = (req, res) => {
