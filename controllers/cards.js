@@ -1,10 +1,42 @@
+const { HTTP_STATUS_OK, HTTP_STATUS_CREATED } = require('http2').constants;
+
+const { default: mongoose } = require('mongoose');
+const BadRequestError = require('../errors/bad-request-error');
+const NotFoundError = require('../errors/not-found-err');
 const Card = require('../models/card');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch(() => res.status(500).send({ message: 'Произошла ошибка' }));
+    .catch(next);
 };
+
+/* module.exports.addCard = (req, res, next) => {
+  const { name, link } = req.body;
+  Card.create({
+    name,
+    link,
+    owner: req.user._id,
+  })
+    .orFail()
+    .then((card) => {
+      res.status(HTTP_STATUS_CREATED).send({ data: card });
+    })
+    .catch((err) => {
+      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Такая карточка не найдена'));
+      } else {
+        next(err);
+      }
+    })
+    .catch((err) => {
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError(err.massage));
+      } else {
+        next(err);
+      }
+    });
+}; */
 
 module.exports.addCard = (req, res, next) => {
   const { name, link } = req.body;
@@ -14,38 +46,38 @@ module.exports.addCard = (req, res, next) => {
     owner: req.user._id,
   })
     .then((card) => {
-      res.status(201).send({ data: card });
+      res.status(HTTP_STATUS_CREATED).send({ data: card });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: err.message });
+      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Такая карточка не найдена'));
+      } else if (err instanceof mongoose.Error.ValidationError) {
+        next(new BadRequestError(err.message));
       } else {
         next(err);
       }
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: 'Такой карточки нет' });
+        next(new NotFoundError('Такой карточки нет'));
         return;
       }
       res.send({ message: 'Карточка удалена' });
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res
-          .status(400)
-          .send({ message: 'Неверный формат идентификатора карточки' });
+      if (err instanceof mongoose.Error.CastError) {
+        next(new BadRequestError('Неверный формат идентификатора карточки'));
         return;
       }
-      res.status(500).send({ message: 'Ошибка на сервере' });
+      next(err);
     });
 };
 
-module.exports.addLikeCard = (req, res) => {
+module.exports.addLikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
@@ -53,38 +85,35 @@ module.exports.addLikeCard = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        return res.status(404).send({
-          message: 'Такой карточки нет',
-        });
+        throw new NotFoundError('Такая карточка не найдена');
       }
-      return res.status(200).send(card);
+      return res.status(HTTP_STATUS_OK).send(card);
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Такой карточки нет' });
+      if (err instanceof mongoose.Error.CastError) {
+        return next(new BadRequestError('Неверный формат идентификатора карточки'));
       }
-      return res.status(500).send({ message: 'Произошла ошибка' });
+      return next(err);
     });
 };
 
-module.exports.removeLikeCard = (req, res) => {
+module.exports.removeLikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   )
+    .orFail()
     .then((card) => {
       if (!card) {
-        return res.status(404).send({
-          message: 'Такой карточки нет',
-        });
+        throw new NotFoundError('Такая карточка не найдена');
       }
-      return res.status(200).send(card);
+      return res.status(HTTP_STATUS_OK).send(card);
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Такой карточки нет' });
+      if (err instanceof mongoose.Error.CastError) {
+        return next(new BadRequestError('Неверный формат идентификатора карточки'));
       }
-      return res.status(500).send({ message: 'Произошла ошибка' });
+      return next(err);
     });
 };
