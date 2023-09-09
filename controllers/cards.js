@@ -103,7 +103,6 @@ module.exports.removeLikeCard = (req, res, next) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   )
-    .orFail()
     .then((card) => {
       if (!card) {
         throw new NotFoundError('Такая карточка не найдена');
