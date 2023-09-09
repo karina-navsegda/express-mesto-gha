@@ -9,8 +9,10 @@ const app = express();
   console.log('порт 3000');
 }); */
 
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 
 mongoose.connect(MESTODB_URL, {
   useNewUrlParser: true,
@@ -25,6 +27,14 @@ app.use((req, res, next) => {
   next();
 });
 
+
+app.use('/users', require('./routes/users'));
+app.use('/cards', require('./routes/cards'));
+
+app.use('*', (req, res) => {
+  res.status(404).send({ message: 'Такой страницы нет :С' });
+});
+
 app.use((err, req, res, next) => {
   // если у ошибки нет статуса, выставляем 500
   const { statusCode = 500, message } = err;
@@ -37,13 +47,6 @@ app.use((err, req, res, next) => {
         : message,
     });
   next();
-});
-
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
-
-app.use('*', (req, res) => {
-  res.status(404).send({ message: 'Такой страницы нет :С' });
 });
 
 app.listen(PORT);
