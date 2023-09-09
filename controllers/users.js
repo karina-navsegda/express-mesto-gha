@@ -13,7 +13,7 @@ module.exports.createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        next(new BadRequestError(err.massage));
+        next(new BadRequestError(err.message));
       } else {
         next(err);
       }
