@@ -9,10 +9,8 @@ const app = express();
   console.log('порт 3000');
 }); */
 
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 
 mongoose.connect(MESTODB_URL, {
   useNewUrlParser: true,
@@ -26,7 +24,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
 
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
