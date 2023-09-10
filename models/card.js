@@ -1,6 +1,6 @@
 // models/card.js
 const mongoose = require('mongoose');
-const linkRegex = require('../utils/constants');
+const { linkRegex } = require("../utils/constants");
 
 const cardSchema = new mongoose.Schema({
   name: {
