@@ -3,6 +3,7 @@ const { HTTP_STATUS_OK, HTTP_STATUS_CREATED } = require('http2').constants;
 const { default: mongoose } = require('mongoose');
 const BadRequestError = require('../errors/bad-request-error');
 const NotFoundError = require('../errors/not-found-err');
+const ForbiddenError = require('../errors/forbidden-error');
 const Card = require('../models/card');
 
 module.exports.getCards = (req, res, next) => {
@@ -10,33 +11,6 @@ module.exports.getCards = (req, res, next) => {
     .then((cards) => res.send(cards))
     .catch(next);
 };
-
-/* module.exports.addCard = (req, res, next) => {
-  const { name, link } = req.body;
-  Card.create({
-    name,
-    link,
-    owner: req.user._id,
-  })
-    .orFail()
-    .then((card) => {
-      res.status(HTTP_STATUS_CREATED).send({ data: card });
-    })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        next(new NotFoundError('Такая карточка не найдена'));
-      } else {
-        next(err);
-      }
-    })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        next(new BadRequestError(err.massage));
-      } else {
-        next(err);
-      }
-    });
-}; */
 
 module.exports.addCard = (req, res, next) => {
   const { name, link } = req.body;
@@ -60,20 +34,30 @@ module.exports.addCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  const userId = req.user._id;
+  const { cardId } = req.params;
+
+  Card.findById(cardId)
     .then((card) => {
       if (!card) {
-        next(new NotFoundError('Такой карточки нет'));
-        return;
+        throw new NotFoundError('Такой карточки нет');
       }
-      res.send({ message: 'Карточка удалена' });
+      if (card.owner.toString() !== userId) {
+        throw new ForbiddenError('Вы не можете удалять чужие карточки');
+      }
+      return Card.findByIdAndRemove(cardId);
+    })
+    .then(() => {
+      res.status(HTTP_STATUS_OK).send();
     })
     .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
+      if (err instanceof NotFoundError || err instanceof ForbiddenError) {
+        next(err);
+      } else if (err instanceof BadRequestError || err.name === 'CastError') {
         next(new BadRequestError('Неверный формат идентификатора карточки'));
-        return;
+      } else {
+        next(err);
       }
-      next(err);
     });
 };
 

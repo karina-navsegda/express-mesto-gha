@@ -1,5 +1,6 @@
 // models/card.js
 const mongoose = require('mongoose');
+const linkRegex = require('../utils/constants');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -13,7 +14,7 @@ const cardSchema = new mongoose.Schema({
     required: [true, 'Обязательное поле'],
     validate: {
       validator(v) {
-        return /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/.test(v);
+        return linkRegex.test(v);
       },
       message: 'Вставьте ссылку на изображение',
     },
