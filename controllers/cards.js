@@ -48,7 +48,7 @@ module.exports.deleteCard = (req, res, next) => {
       return Card.findByIdAndRemove(cardId);
     })
     .then(() => {
-      res.status(HTTP_STATUS_OK).send();
+      res.status(HTTP_STATUS_OK).send('Карточка удалена');
     })
     .catch((err) => {
       if (err instanceof NotFoundError || err instanceof ForbiddenError) {
