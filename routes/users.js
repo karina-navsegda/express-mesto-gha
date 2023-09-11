@@ -15,6 +15,8 @@ const {
 
 router.get('/', getUser);
 
+router.get('/me', getUserMe);
+
 router.get('/:userId', celebrate({
   params: Joi.object().keys({
     userId: Joi.string().length(24).required(),
@@ -27,8 +29,6 @@ router.patch('/me', celebrate({
     about: Joi.string().min(2).max(30),
   }),
 }), editUser);
-
-router.get('/me', getUserMe);
 
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
